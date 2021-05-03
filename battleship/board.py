@@ -8,7 +8,7 @@ class BattleShipBoard():
     MISSED = "[*]"
 
     def __init__(self):
-        self.board = self.create_board()
+        self.__board = self.create_board()
         # self.render_board()
 
     def create_board(self):
@@ -31,7 +31,7 @@ class BattleShipBoard():
         for y in range(10):
             print(self.__ROWS[y], "", end="")
             for x in range(10):
-                print(self.board[y][x], end="")
+                print(self.__board[y][x], end="")
             
             print("")
     
@@ -39,4 +39,7 @@ class BattleShipBoard():
         """ Method add ship's cords to board """
 
         for cord in ship.parts:
-            self.board[cord[0]][cord[1]] = self.BUSY
+            self.__board[cord[0]][cord[1]] = self.BUSY
+
+    def change_field(self, y, x, shot_type):
+        self.__board[y][x] = shot_type

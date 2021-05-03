@@ -5,6 +5,7 @@ class BattleShipBoard():
     EMPTY = "[ ]"
     BUSY = "[O]"
     HIT = "[X]"
+    MISSED = "[*]"
 
     def __init__(self):
         self.board = self.create_board()

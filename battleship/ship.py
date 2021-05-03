@@ -19,9 +19,11 @@ class Ship():
         self.parts = []
         self.startY = start_y
         self.startX = start_x
-        self.create_ship(direction)
+        self.__create_ship(direction)
     
-    def create_ship(self, direction):
+    def __create_ship(self, direction):
+        """ Generate ship and add save ship's cords """
+
         if self.size == 1:
             self.parts.append([self.startY, self.startY])
         else:

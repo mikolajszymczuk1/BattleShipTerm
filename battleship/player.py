@@ -57,10 +57,13 @@ class BattleShipPlayer():
 
     def show_boards(self):
         """ Print main player's board and board to shot """
-        
+
         self.board.render_board()
         print("--------------------------------")
         self.board_to_shots.render_board()
 
     def shot(self):
-        pass
+        """ Shot to second player """
+
+        y, x = text_to_cords(input("Podaj pozycję: "))
+        self.board_to_shots.change_field(y, x, BattleShipBoard.MISSED)

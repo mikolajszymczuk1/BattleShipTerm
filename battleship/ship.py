@@ -1,11 +1,6 @@
 class Ship():
     """ BattleShip ship class """
 
-    MINI = 1    # *
-    SMALL = 2   # **
-    MEDIUM = 3  # ***
-    LARGE = 4   # ****
-
     DIRS = {
         #         Y   X
         "left":  [0, -1],
@@ -19,15 +14,16 @@ class Ship():
         self.parts = []
         self.startY = start_y
         self.startX = start_x
-        self.__create_ship(direction)
+        self.direction = direction
+        self.__create_ship()
     
-    def __create_ship(self, direction):
+    def __create_ship(self):
         """ Generate ship and add save ship's cords """
 
         if self.size == 1:
-            self.parts.append([self.startY, self.startY])
+            self.parts.append([self.startY, self.startX])
         else:
-            d = self.DIRS[direction]
+            d = self.DIRS[self.direction]
             for i in range(self.size):
                 self.parts.append([self.startY, self.startX])
                 self.startY += d[0]

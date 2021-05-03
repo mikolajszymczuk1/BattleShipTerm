@@ -1,0 +1,10 @@
+4 J10 left
+3 A10 left
+3 C6 right
+2 A1 right
+2 F6 down
+2 H1 right
+1 J1 left
+1 A4 left
+1 E4 left
+1 H8 left

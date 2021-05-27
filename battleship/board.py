@@ -43,3 +43,7 @@ class BattleShipBoard():
 
     def change_field(self, y, x, shot_type):
         self.__board[y][x] = shot_type
+
+
+if __name__ == '__main__':
+    print("...")

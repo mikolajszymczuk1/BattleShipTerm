@@ -1,6 +1,9 @@
-from board import BattleShipBoard
-from ship import Ship
+import os
+from .board import BattleShipBoard
+from .ship import Ship
 
+THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+SHIPS_TEMPLATE = os.path.join(THIS_FOLDER, "ships.txt")
 
 def text_to_cords(text_cords):
     ROWS = "ABCDEFGHIJ"
@@ -20,7 +23,7 @@ class BattleShipPlayer():
     def new_ships_set(self):
         """ Create all ships and add to board """
 
-        with open("ships.txt", "r") as file:
+        with open(SHIPS_TEMPLATE, "r") as file:
             for line in file:
                 size, text_cords, direction = line.strip().split(" ")
                 self.__create_ship(int(size), text_cords, direction)
@@ -45,3 +48,7 @@ class BattleShipPlayer():
 
         y, x = text_to_cords(input("Podaj pozycję: "))
         self.board_to_shots.change_field(y, x, BattleShipBoard.MISSED)
+
+
+if __name__ == '__main__':
+    print("...")

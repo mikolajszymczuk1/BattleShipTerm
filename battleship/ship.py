@@ -28,3 +28,12 @@ class Ship():
                 self.parts.append([self.startY, self.startX])
                 self.startY += d[0]
                 self.startX += d[1]
+
+    def is_my_cords(self, y, x):
+        """ Method to check if cords belong to ship """
+
+        for p in self.parts:
+            if p == [y, x]:
+                return True
+        
+        return False

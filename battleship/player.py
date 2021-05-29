@@ -8,10 +8,25 @@ THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 SHIPS_TEMPLATE = os.path.join(THIS_FOLDER, "ships.txt")
 
 def text_to_cords(text_cords):
+    """ Function to convert cords from example: A5 to: y=0, x=4 """
+
     ROWS = "ABCDEFGHIJ"
     y = ROWS.index(text_cords[0])
     x = int(text_cords[1:]) - 1
     return y, x
+
+def text_to_field_type(t):
+    """ Function return shot type depending on t """
+
+    if t == "MISS":
+        return BattleShipBoard.MISSED
+    
+    return BattleShipBoard.HIT
+
+def clear():
+    """ Clear function to clear terminal """
+
+    os.system("clear")
 
 class BattleShipPlayer():
     """ BattleShip player class """
@@ -23,8 +38,10 @@ class BattleShipPlayer():
         self.hostname = hostname
         self.port = port
         self.current = False
+        self.last_shot = None
         self.new_ships_set()  # Deploy ships on board
         self.client = self.connect_to_server()  # Set up connection
+        clear()
 
     def connect_to_server(self):
         """ Connect to server and run main player loop """
@@ -45,18 +62,41 @@ class BattleShipPlayer():
                 msg = self.client.recv(1024)
                 if msg.decode("utf-8") == "current":
                     self.current = True
-                    continue
-            
-                print("Enemy shot: ", msg.decode('utf8')[1:])  # Catch shot
-                self.client.send("CMISSED".encode("utf-8"))  # Check shot
+                else:
+                    clear()
+                    self.check_shot(msg.decode("utf-8")[1:])  # Check shot
             else:
-                shot_msg = input("Your shot: ")
-                self.client.send(("S" + shot_msg).encode("utf-8"))  # Send shot
+                self.shot()  # Send shot
+                clear()
                 
-                # Catch check
                 check_msg = self.client.recv(1024)
-                print("Check from enemy: ", check_msg.decode('utf-8')[1:])
-                self.current = False  # Turn off player
+                self.update_board_to_shots(check_msg.decode("utf-8")[1:], self.last_shot)  # Catch check
+
+    def check_shot(self, cords):
+        """ Check if shot from second player is missed or hit and 
+        send information about it to second player """
+        
+        y, x = text_to_cords(cords)
+        output = "MISS"
+
+        for ship in self.ships:
+            if ship.is_my_cords(y, x):
+                output = "HIT"
+                break
+        
+        self.board.change_field(y, x, text_to_field_type(output))
+        self.client.send(f"C{output}".encode("utf-8"))
+        self.show_boards()
+        print("Enemy shot: ", cords)
+
+    def update_board_to_shots(self, check_msg, last_shot):
+        """ Add shot to board to shots """
+        
+        y, x = text_to_cords(last_shot)
+        self.board_to_shots.change_field(y, x, text_to_field_type(check_msg))
+        self.show_boards()
+        print("Check from enemy: ", check_msg)
+        self.current = False  # Turn off player
 
     def new_ships_set(self):
         """ Create all ships and add to board """
@@ -84,8 +124,17 @@ class BattleShipPlayer():
     def shot(self):
         """ Shot to second player """
 
-        y, x = text_to_cords(input("Podaj pozycję: "))
-        self.board_to_shots.change_field(y, x, BattleShipBoard.MISSED)
+        SHOTS_ROWS = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
+        SHOTS_COLS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+
+        shot_msg = ""
+        while True:
+            shot_msg = input("Your shot: ")
+            if len(shot_msg) and shot_msg[0] in SHOTS_ROWS and shot_msg[1:] in SHOTS_COLS:
+                break
+        
+        self.last_shot = shot_msg
+        self.client.send(("S" + shot_msg).encode("utf-8"))  # Send shot
 
 
 if __name__ == '__main__':

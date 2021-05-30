@@ -68,7 +68,7 @@ class BattleShipPlayer():
             else:
                 self.shot()  # Send shot
                 clear()
-                
+
                 check_msg = self.client.recv(1024)
                 self.update_board_to_shots(check_msg.decode("utf-8")[1:], self.last_shot)  # Catch check
 
@@ -85,9 +85,18 @@ class BattleShipPlayer():
                 break
         
         self.board.change_field(y, x, text_to_field_type(output))
-        self.client.send(f"C{output}".encode("utf-8"))
         self.show_boards()
         print("Enemy shot: ", cords)
+
+        # if all ships are destroyed, disconnect
+        if self.board.are_all_ships_destoryed(self.ships):
+            output = "WIN"
+            print("You lose :(")
+            self.client.send(f"C{output}".encode("utf-8"))
+            self.client.close()
+            sys.exit()
+
+        self.client.send(f"C{output}".encode("utf-8"))
 
     def update_board_to_shots(self, check_msg, last_shot):
         """ Add shot to board to shots """
@@ -97,6 +106,12 @@ class BattleShipPlayer():
         self.show_boards()
         print("Check from enemy: ", check_msg)
         self.current = False  # Turn off player
+
+        # if player gets win message, disconnect
+        if check_msg == "WIN":
+            print("You Win !!!")
+            self.client.close()
+            sys.exit()
 
     def new_ships_set(self):
         """ Create all ships and add to board """

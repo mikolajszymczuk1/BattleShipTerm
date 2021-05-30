@@ -77,7 +77,7 @@ def main():
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((HOSTNAME, PORT))
-    server.listen(2)  # Listen for only 2 players
+    server.listen()
 
     while True:
         conn, addr = server.accept()

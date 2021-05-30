@@ -44,6 +44,17 @@ class BattleShipBoard():
     def change_field(self, y, x, shot_type):
         self.__board[y][x] = shot_type
 
+    def are_all_ships_destoryed(self, ships):
+        """ Return True if all ships on board are destroyed """
+
+        for ship in ships:
+            for p in ship.parts:
+                y, x = p
+                if self.__board[y][x] != self.HIT:
+                    return False
+
+        return True
+
 
 if __name__ == '__main__':
     print("...")

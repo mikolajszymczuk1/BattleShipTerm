@@ -1,6 +1,7 @@
 import os
 import socket
 import sys
+import select
 from .board import BattleShipBoard
 from .ship import Ship
 
@@ -58,19 +59,30 @@ class BattleShipPlayer():
         """ Main player loop """
         
         while True:
-            if not self.current:
-                msg = self.client.recv(1024)
-                if msg.decode("utf-8") == "current":
-                    self.current = True
-                else:
-                    clear()
-                    self.check_shot(msg.decode("utf-8")[1:])  # Check shot
-            else:
-                self.shot()  # Send shot
-                clear()
+            sockets = [sys.stdin, self.client]
+            read_soc, write_soc, error_soc = select.select(sockets, [], [])
 
-                check_msg = self.client.recv(1024)
-                self.update_board_to_shots(check_msg.decode("utf-8")[1:], self.last_shot)  # Catch check
+            for socks in read_soc:
+                if socks == self.client:
+                    msg = self.client.recv(1024)
+                    if msg.decode("utf-8") == "end":  # When player disconnect, second player disconnect too
+                        clear()
+                        print("Enemy disconnect or max number of players in game !")
+                        self.client.close()
+                        sys.exit()
+
+                    if not self.current:
+                        if msg.decode("utf-8") == "current":
+                            self.current = True
+                            print("Your shot: ")
+                        else:
+                            clear()
+                            self.check_shot(msg.decode("utf-8")[1:])  # Check shot
+                    else:
+                        self.update_board_to_shots(msg.decode("utf-8")[1:], self.last_shot)  # Catch check
+                else:
+                    if self.current:
+                        self.shot()  # Send shot
 
     def check_shot(self, cords):
         """ Check if shot from second player is missed or hit and 
@@ -142,14 +154,12 @@ class BattleShipPlayer():
         SHOTS_ROWS = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
         SHOTS_COLS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
 
-        shot_msg = ""
-        while True:
-            shot_msg = input("Your shot: ")
-            if len(shot_msg) and shot_msg[0] in SHOTS_ROWS and shot_msg[1:] in SHOTS_COLS:
-                break
-        
-        self.last_shot = shot_msg
-        self.client.send(("S" + shot_msg).encode("utf-8"))  # Send shot
+        shot_msg = sys.stdin.readline()[:-1]
+        if len(shot_msg) and shot_msg[0] in SHOTS_ROWS and shot_msg[1:] in SHOTS_COLS:
+            self.last_shot = shot_msg
+            self.client.send(("S" + shot_msg).encode("utf-8"))  # Send shot
+            sys.stdout.flush()
+            clear()
 
 
 if __name__ == '__main__':

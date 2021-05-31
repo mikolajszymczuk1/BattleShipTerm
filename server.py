@@ -47,9 +47,12 @@ def remove_player(conn):
     global player2
 
     if conn == player1:
-        player1 = None
+        player2.send("end".encode("utf-8"))
     else:
-        player2 = None
+        player1.send("end".encode("utf-8"))
+    
+    player1 = None
+    player2 = None
 
 def handle_player(conn, addr):
     """ Catch and send shots/checks """
@@ -57,18 +60,21 @@ def handle_player(conn, addr):
     global current_player
 
     while True:
-        message = conn.recv(1024)
-        if message:
-            if message.decode("utf-8")[0] == "S":
-                print("Shot from: ", addr, " -> ", message.decode('utf8')[1:])
-                send_shot(message, conn)
+        try:
+            message = conn.recv(1024)
+            if message:
+                if message.decode("utf-8")[0] == "S":
+                    print("Shot from: ", addr, " -> ", message.decode('utf8')[1:])
+                    send_shot(message, conn)
+                else:
+                    print("Check from: ", addr, " --> ", message.decode("utf-8")[1:])
+                    send_check(message, conn)
+                    current_player = next_player(current_player, player1, player2)
             else:
-                print("Check from: ", addr, " --> ", message.decode("utf-8")[1:])
-                send_check(message, conn)
-                current_player = next_player(current_player, player1, player2)
-        else:
-            print("Disconnect: ", addr)
-            remove_player(conn)
+                print("Disconnect: ", addr)
+                remove_player(conn)
+                break
+        except:
             break
 
 def main():
@@ -81,19 +87,23 @@ def main():
 
     while True:
         conn, addr = server.accept()
-        print("Connected to: ", addr)
 
-        if player1 == None:
-            player1 = conn
+        if player1 == None or player2 == None:
+            print("Connected to: ", addr)
+
+            if player1 == None:
+                player1 = conn
+            else:
+                player2 = conn
+
+            if player1 != None and player2 != None:
+                current_player = who_is_first(player1, player2)
+                current_player.send("current".encode("utf-8"))
+
+            thread = threading.Thread(target=handle_player, args=(conn, addr))
+            thread.start()
         else:
-            player2 = conn
-
-        if player1 != None and player2 != None:
-            current_player = who_is_first(player1, player2)
-            current_player.send("current".encode("utf-8"))
-
-        thread = threading.Thread(target=handle_player, args=(conn, addr))
-        thread.start()
+            conn.send("end".encode("utf-8"))  # When two players in game, disconnect other players
 
 
 if __name__ == '__main__':
